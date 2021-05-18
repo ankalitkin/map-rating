@@ -22,6 +22,7 @@ export default class App extends Vue {
 @import '~@mdi/font/css/materialdesignicons.css';
 @import "~typeface-roboto-multilang/latin-ext.css";
 @import "~typeface-roboto-multilang/cyrillic-ext.css";
+@import "~leaflet/dist/leaflet.css";
 
 .v-btn, .v-tab {
   text-transform: none !important;
