@@ -1,0 +1,33 @@
+node[shop=convenience];way[shop=convenience];relation[shop=convenience];
+node[shop=supermarket];way[shop=supermarket];relation[shop=supermarket];
+node[amenity=marketplace];way[amenity=marketplace];relation[amenity=marketplace];
+node[amenity=pharmacy];way[amenity=pharmacy];relation[amenity=pharmacy];
+node[healthcare=pharmacy];way[healthcare=pharmacy];relation[healthcare=pharmacy];
+node[amenity=fast_food];way[amenity=fast_food];relation[amenity=fast_food];
+node[amenity=cafe];way[amenity=cafe];relation[amenity=cafe];
+node[amenity=kindergarten];way[amenity=kindergarten];relation[amenity=kindergarten];
+node[amenity=school];way[amenity=school];relation[amenity=school];
+node[amenity=clinic];way[amenity=clinic];relation[amenity=clinic];
+node[amenity=hospital];way[amenity=hospital];relation[amenity=hospital];
+node[amenity=doctor];way[amenity=doctor];relation[amenity=doctor];
+node[amenity=doctors];way[amenity=doctors];relation[amenity=doctors];
+node[healthcare=clinic];way[healthcare=clinic];relation[healthcare=clinic];
+node[healthcare=hospital];way[healthcare=hospital];relation[healthcare=hospital];
+node[healthcare=doctor];way[healthcare=doctor];relation[healthcare=doctor];
+node[healthcare=doctors];way[healthcare=doctors];relation[healthcare=doctors];
+node[healthcare=centre];way[healthcare=centre];relation[healthcare=centre];
+node[amenity=theatre];way[amenity=theatre];relation[amenity=theatre];
+node[amenity=cinema];way[amenity=cinema];relation[amenity=cinema];
+node[amenity=nightclub];way[amenity=nightclub];relation[amenity=nightclub];
+node[amenity=pub];way[amenity=pub];relation[amenity=pub];
+node[amenity=bar];way[amenity=bar];relation[amenity=bar];
+
+
+[out:json]
+//[bbox:{{bbox}}];
+[bbox:51.5618, 39.1020, 51.7618, 39.3020];
+(
+node[shop];way[shop];relation[shop];
+  node[amenity];way[amenity];relation[amenity];
+  node[healthcare];way[healthcare];relation[healthcare];
+);out center;
