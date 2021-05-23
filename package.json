@@ -9,13 +9,11 @@
   },
   "dependencies": {
     "@mdi/font": "^5.9.55",
-    "@types/haversine": "^1.1.4",
-    "@types/leaflet.heat": "^0.2.0",
     "axios": "^0.21.1",
     "core-js": "^3.6.5",
     "haversine": "^1.1.1",
     "leaflet": "^1.7.1",
-    "leaflet.heat": "^0.2.0",
+    "leaflet.idw": "^0.0.1",
     "overpass-ts": "^4.2.4",
     "typeface-roboto-multilang": "^1.0.0",
     "vue": "^2.6.11",
@@ -24,6 +22,8 @@
     "vuetify": "^2.4.0"
   },
   "devDependencies": {
+    "@types/haversine": "^1.1.4",
+    "@types/leaflet": "^1.7.0",
     "@typescript-eslint/eslint-plugin": "^4.18.0",
     "@typescript-eslint/parser": "^4.18.0",
     "@vue/cli-plugin-babel": "~4.5.0",

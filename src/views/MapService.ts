@@ -95,12 +95,12 @@ export default class MapService {
         return minPoint;
     }
 
-    public static cacheDistances(center: LatLngTuple, delta: number): void {
+    public static cacheDistances(bounds: BBox): void {
         const options: haversine.Options = {unit: 'meter', format: '[lat,lon]'}
         this.calcCache.metersPerLatDeg =
-            haversine([center[0]-delta, center[1]], [center[0]+delta, center[1]], options) / 2 / delta;
+            haversine([bounds[0], bounds[1]], [bounds[2], bounds[1]], options) / (bounds[2] - bounds[0]);
         this.calcCache.metersPerLngDeg =
-            haversine([center[0], center[1]-delta], [center[0], center[1]+delta], options) / 2 / delta;
+            haversine([bounds[0], bounds[1]], [bounds[0], bounds[3]], options) / (bounds[3] - bounds[1]);
     }
 
     private static linearDistance(a: LatLngTuple, b: LatLngTuple) {
