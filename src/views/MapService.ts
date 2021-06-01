@@ -1,8 +1,7 @@
 import {BBox, LifeCase, OverpassElem} from "@/views/Types";
 import Preferences from "@/views/Preferences";
-import {overpass, OverpassJson, OverpassRelation, OverpassWay} from "overpass-ts";
+import {overpass, OverpassJson} from "overpass-ts";
 import {LatLngTuple} from "leaflet";
-import {OverpassNode} from "overpass-ts/dist/types";
 import haversine from "haversine";
 
 export default class MapService {
@@ -25,8 +24,14 @@ export default class MapService {
             }
         }
         const data = await overpass(loadQuery) as unknown as OverpassJson;
-        localStorage.setItem("cachedQuery", loadQuery);
-        localStorage.setItem("cachedData", JSON.stringify(data));
+        try {
+            localStorage.setItem("cachedQuery", loadQuery);
+            localStorage.setItem("cachedData", JSON.stringify(data));
+        } catch (e) {
+            console.warn("Cannot save loaded data to cache");
+            localStorage.removeItem("cachedQuery");
+            localStorage.removeItem("cachedData");
+        }
         return data;
     }
 
@@ -68,17 +73,15 @@ export default class MapService {
 
     private static getLatLng(element: OverpassElem): LatLngTuple {
         if (element.type === "node") {
-            const node = element as OverpassNode;
-            return [node.lat, node.lon];
+            return [element.lat, element.lon];
         }
         if (element.type === "way" || element.type === "relation") {
-            const wr = element as OverpassWay | OverpassRelation;
-            if (!wr.center) {
-                throw "No center data provided";
+            if (!element.center) {
+                throw new Error("No center data provided");
             }
-            return [wr.center.lat, wr.center.lon];
+            return [element.center.lat, element.center.lon];
         }
-        throw "Invalid element type";
+        throw new Error("Invalid element type");
     }
 
     private static getClosestPoint(data: OverpassElem[], latlng: LatLngTuple): LatLngTuple {

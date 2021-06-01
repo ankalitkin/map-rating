@@ -9,7 +9,7 @@
 import Vue from 'vue'
 import {Component} from "vue-property-decorator";
 import * as L from 'leaflet';
-import {LatLngBoundsExpression, LatLngTuple} from 'leaflet';
+import {LatLngTuple} from 'leaflet';
 import {BBox} from "@/views/Types";
 import MapService from "@/views/MapService";
 import Preferences from "@/views/Preferences";
@@ -47,7 +47,7 @@ export default class Home extends Vue {
     this.state = "Загрузка данных";
     MapService.loadAmenities(bbox).then(() => {
       this.state = "Предварительная отрисовка";
-      const imageBounds: LatLngBoundsExpression = [[bbox[0], bbox[1]], [bbox[2], bbox[3]]];
+      const imageBounds: L.LatLngBoundsExpression = [[bbox[0], bbox[1]], [bbox[2], bbox[3]]];
       setTimeout(() => {
         const canvas = OverlayDrawer.drawRating(bbox, 100, 100, Preferences.cases[0]);
         if (this.lastOverlay) {
