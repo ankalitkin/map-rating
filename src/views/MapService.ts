@@ -36,13 +36,25 @@ export default class MapService {
     }
 
     private static createQuery(bbox: BBox): string {
-        let query = `[out:json][bbox:${bbox.join(",")}];(\n`;
-        Object.keys(Preferences.groups).forEach(groupName => {
-            Preferences.groups[groupName].tags.forEach(tag => {
-                const cond = tag.replace(":", "=").replace(" ", "");
-                query += `node[${cond}];way[${cond}];relation[${cond}];\n`
+        const keys: string[] = [];
+        const values: string[] = [];
+        Object.keys(Preferences.groups)
+            .flatMap(groupName => Preferences.groups[groupName])
+            .flatMap(group => group.tags)
+            .forEach(tag => {
+                const colon = tag.indexOf(':');
+                const key = tag.substring(0, colon).trim();
+                if (keys.indexOf(key) < 0) {
+                    keys.push(key)
+                }
+                const value = tag.substring(colon + 1).trim();
+                if (values.indexOf(value) < 0) {
+                    values.push(value)
+                }
             });
-        });
+        const cond = `~"^(${keys.join('|')})$"~"^(${values.join('|')})$"`;
+        let query = `[out:json][bbox:${bbox.join(",")}];(\n`;
+        query += `node[${cond}];way[${cond}];relation[${cond}];\n`
         query += ");out center;";
         return query;
     }
