@@ -9,10 +9,9 @@
 import Vue from 'vue'
 import {Component} from "vue-property-decorator";
 import * as L from 'leaflet';
-import {BBox} from "@/views/Types";
+import {BBox, LifeCase} from "@/views/Types";
 import MapService from "@/views/MapService";
 import Preferences from "@/views/Preferences";
-import 'leaflet.idw/src/leaflet-idw';
 import OverlayDrawer from "@/components/OverlayDrawer";
 
 @Component({})
@@ -33,15 +32,15 @@ export default class Home extends Vue {
     L.tileLayer(this.tileProvider.url, {attribution: this.tileProvider.attribution}).addTo(this.map);
     this.map.on('click', (e: { latlng: L.LatLng }) => {
       const pos: L.LatLngTuple = [e.latlng.lat, e.latlng.lng];
-      const rating = MapService.getAverageRating(Preferences.cases[0], pos);
+      const rList = MapService.getAverageRatingList(Preferences.cases[0], pos);
       L.popup()
           .setLatLng(e.latlng)
-          .setContent('<b>Рейтинг: </b>' + rating.toFixed(3))
+          .setContent('<b>Рейтинг: </b>' + rList.toFixed(3))
           .openOn(this.map);
     })
   }
 
-  private async paint(): void {
+  private async paint(): Promise<void> {
     try {
       this.state = "Загрузка данных";
       await MapService.loadAmenities(this.bbox());
@@ -50,12 +49,14 @@ export default class Home extends Vue {
       this.state = "Произошла ошибка при загрузке данных";
     }
 
+    const selectedCase = Preferences.cases[0];
+
     try {
       this.state = "Предварительная отрисовка";
-      await this.draw(100, 100);
+      await this.draw(100, 100, selectedCase);
 
       this.state = "Финальная отрисовка";
-      await this.draw(256, 256);
+      await this.draw(256, 256, selectedCase);
 
       this.state = "Готов"
     } catch (e) {
@@ -64,11 +65,11 @@ export default class Home extends Vue {
     }
   }
 
-  private async draw(width: number, height: number) {
+  private async draw(width: number, height: number, selectedCase: LifeCase): Promise<void> {
     const bbox = this.bbox();
     const imageBounds: L.LatLngBoundsExpression = [[bbox[0], bbox[1]], [bbox[2], bbox[3]]];
-    const canvas = await new Promise(resolve => setTimeout(() => {
-      resolve(OverlayDrawer.drawRating(bbox, width, height, Preferences.cases[0]));
+    const canvas: HTMLCanvasElement = await new Promise(resolve => setTimeout(() => {
+      resolve(OverlayDrawer.drawRating(bbox, width, height, selectedCase));
     }));
     if (this.lastOverlay) {
       this.lastOverlay.removeFrom(this.map);

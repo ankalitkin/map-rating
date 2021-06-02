@@ -9,9 +9,11 @@
   },
   "dependencies": {
     "@mdi/font": "^5.9.55",
+    "@types/kd-tree-javascript": "^1.0.0",
     "axios": "^0.21.1",
     "core-js": "^3.6.5",
     "haversine": "^1.1.1",
+    "kd-tree-javascript": "^1.0.3",
     "leaflet": "^1.7.1",
     "overpass-ts": "^4.2.4",
     "typeface-roboto-multilang": "^1.0.0",
