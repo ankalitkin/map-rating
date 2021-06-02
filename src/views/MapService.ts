@@ -14,10 +14,6 @@ export default class MapService {
         metersPerLngDeg: 0,
     }
 
-    private static getCachedQuery(): string | null {
-        return localStorage.getItem("cachedQuery");
-    }
-
     public static async loadAmenities(bbox: BBox): Promise<void> {
         const acceptedToSave = ["amenity", "shop", "healthcare", "highway"];
         const overpassData = await MapService.queryData(bbox);
@@ -58,6 +54,23 @@ export default class MapService {
             haversine([bounds[0], bounds[1]], [bounds[2], bounds[1]], options) / (bounds[2] - bounds[0]);
         MapService.calcCache.metersPerLngDeg =
             haversine([bounds[0], bounds[1]], [bounds[0], bounds[3]], options) / (bounds[3] - bounds[1]);
+    }
+
+    public static getAverageRating(lifeCase: LifeCase, latLng: LatLngTuple): number {
+        const sum = lifeCase.groupsNames
+            .filter(groupName => groupName in MapService.amenitiesList)
+            .map(groupName => {
+                const func = groupName in this.amenitiesTree ?
+                    MapService.getRatingByGroupNameTree :
+                    MapService.getRatingByGroupNameList;
+                return func(groupName, latLng);
+            })
+            .reduce((a, b) => a + b, 0);
+        return sum / lifeCase.groupsNames.length;
+    }
+
+    private static getCachedQuery(): string | null {
+        return localStorage.getItem("cachedQuery");
     }
 
     private static createQuery(bbox: BBox): string {
@@ -103,35 +116,6 @@ export default class MapService {
             return [element.center.lat, element.center.lon];
         }
         throw new Error("Invalid element type");
-    }
-
-    public static getAverageRatingList(lifeCase: LifeCase, latLng: LatLngTuple): number {
-        const sum = lifeCase.groupsNames
-            .filter(groupName => groupName in MapService.amenitiesList)
-            .map(groupName => MapService.getRatingByGroupNameList(groupName, latLng))
-            .reduce((a, b) => a + b, 0);
-        return sum / lifeCase.groupsNames.length;
-    }
-
-    public static getAverageRatingTree(lifeCase: LifeCase, latLng: LatLngTuple): number {
-        const sum = lifeCase.groupsNames
-            .filter(groupName => groupName in MapService.amenitiesTree)
-            .map(groupName => MapService.getRatingByGroupNameTree(groupName, latLng))
-            .reduce((a, b) => a + b, 0);
-        return sum / lifeCase.groupsNames.length;
-    }
-
-    public static getAverageRating(lifeCase: LifeCase, latLng: LatLngTuple): number {
-        const sum = lifeCase.groupsNames
-            .filter(groupName => groupName in MapService.amenitiesList)
-            .map(groupName => {
-                const func = groupName in this.amenitiesTree ?
-                    MapService.getRatingByGroupNameTree :
-                    MapService.getRatingByGroupNameList;
-                return func(groupName, latLng);
-            })
-            .reduce((a, b) => a + b, 0);
-        return sum / lifeCase.groupsNames.length;
     }
 
     private static async queryData(bbox: BBox): Promise<OverpassJson> {

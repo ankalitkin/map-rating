@@ -1,8 +1,18 @@
 <template>
   <div>
     <div id="map" style="height: 800px"/>
-    <v-btn @click="paint" :disabled="false">Раскрасить карту</v-btn>
-    {{ state }}
+    <div class="ma-4">
+      <v-btn @click="paint" :disabled="false">Раскрасить карту</v-btn>
+      <span class="ml-4">{{ state }}</span>
+      <v-radio-group v-model="selected_case">
+        <v-radio
+            v-for="(my_case, i) in Preferences.cases"
+            :key="i"
+            :label="my_case.name"
+            :value="i"
+        ></v-radio>
+      </v-radio-group>
+    </div>
   </div>
 </template>
 <script lang="ts">
@@ -16,10 +26,12 @@ import OverlayDrawer from "@/components/OverlayDrawer";
 
 @Component({})
 export default class Home extends Vue {
+  private Preferences = Preferences;
   private map!: L.Map;
   private center: L.LatLngTuple = [51.6618, 39.2020];
   private lastOverlay: L.ImageOverlay | null = null;
   private zoom = 13;
+  private selected_case = 0;
   private state = "Готов"
 
   private tileProvider = {
@@ -32,7 +44,7 @@ export default class Home extends Vue {
     L.tileLayer(this.tileProvider.url, {attribution: this.tileProvider.attribution}).addTo(this.map);
     this.map.on('click', (e: { latlng: L.LatLng }) => {
       const pos: L.LatLngTuple = [e.latlng.lat, e.latlng.lng];
-      const rList = MapService.getAverageRatingList(Preferences.cases[0], pos);
+      const rList = MapService.getAverageRating(Preferences.cases[this.selected_case], pos);
       L.popup()
           .setLatLng(e.latlng)
           .setContent('<b>Рейтинг: </b>' + rList.toFixed(3))
@@ -49,14 +61,15 @@ export default class Home extends Vue {
       this.state = "Произошла ошибка при загрузке данных";
     }
 
-    const selectedCase = Preferences.cases[0];
+    const selectedCase = Preferences.cases[this.selected_case];
+    const size = this.map.getSize();
 
     try {
       this.state = "Предварительная отрисовка";
-      await this.draw(100, 100, selectedCase);
+      await this.draw((size.x / 8) | 0, (size.y / 8) | 0, selectedCase);
 
       this.state = "Финальная отрисовка";
-      await this.draw(256, 256, selectedCase);
+      await this.draw((size.x / 2) | 0, (size.y / 2) | 0, selectedCase);
 
       this.state = "Готов"
     } catch (e) {
