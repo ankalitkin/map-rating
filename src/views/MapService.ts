@@ -18,9 +18,9 @@ export default class MapService {
     private static async queryData(bbox: BBox): Promise<OverpassJson> {
         const loadQuery = this.createQuery(bbox);
         if (this.getCachedQuery() === loadQuery) {
-            const data = localStorage.getItem("cachedData");
-            if (data) {
-                return JSON.parse(data);
+            const cachedData = localStorage.getItem("cachedData");
+            if (cachedData) {
+                return JSON.parse(cachedData);
             }
         }
         const data = await overpass(loadQuery) as unknown as OverpassJson;
@@ -84,14 +84,14 @@ export default class MapService {
         throw new Error("Invalid element type");
     }
 
-    private static getClosestPoint(data: OverpassElem[], latlng: LatLngTuple): LatLngTuple {
-        let minres = Infinity;
+    private static getClosestPoint(data: OverpassElem[], latLng: LatLngTuple): LatLngTuple {
+        let minRes = Infinity;
         let minPoint = this.getLatLng(data[0]);
         data.forEach(el => {
             const pos = this.getLatLng(el);
-            const d = (pos[0] - latlng[0]) ** 2 + (pos[1] - latlng[1]) ** 2;
-            if (d < minres) {
-                minres = d;
+            const d = (pos[0] - latLng[0]) ** 2 + (pos[1] - latLng[1]) ** 2;
+            if (d < minRes) {
+                minRes = d;
                 minPoint = pos;
             }
         });
@@ -107,15 +107,14 @@ export default class MapService {
     }
 
     private static linearDistance(a: LatLngTuple, b: LatLngTuple) {
-        const x = ((a[1]-b[1])*this.calcCache.metersPerLngDeg)**2;
-        const y = ((a[0]-b[0])*this.calcCache.metersPerLatDeg)**2;
-        return Math.sqrt(x+y);
+        const x = ((a[1] - b[1]) * this.calcCache.metersPerLngDeg) ** 2;
+        const y = ((a[0] - b[0]) * this.calcCache.metersPerLatDeg) ** 2;
+        return Math.sqrt(x + y);
     }
 
-    private static getMinimalDistanceMeters(data: OverpassElem[], latlng: LatLngTuple): number {
-        const pos = this.getClosestPoint(data, latlng);
-        //return haversine(pos, latlng, {unit: 'meter', format: '[lat,lon]'});
-        return this.linearDistance(pos, latlng);
+    private static getMinimalDistanceMeters(data: OverpassElem[], lanLng: LatLngTuple): number {
+        const pos = this.getClosestPoint(data, lanLng);
+        return this.linearDistance(pos, lanLng);
     }
 
     private static calcTimeMinutes(distance: number): number {
@@ -126,24 +125,22 @@ export default class MapService {
         if (time < 2.5) {
             return 5;
         }
-        //return 5 - Math.log2(time / 2.5);
-        return 12.5/time;
-        //return 5 - Math.log2(time/2.5);
+        return 12.5 / time;
     }
 
-    private static getRatingByGroupName(groupName: string, latlng: LatLngTuple): number {
+    private static getRatingByGroupName(groupName: string, latLng: LatLngTuple): number {
         const data = this.amenities[groupName];
-        const distance = this.getMinimalDistanceMeters(data, latlng);
+        const distance = this.getMinimalDistanceMeters(data, latLng);
         const time = this.calcTimeMinutes(distance);
         return this.calcRating(time);
     }
 
-    public static getAverageRating(lifecase: LifeCase, latlng: LatLngTuple): number {
-        const sum = lifecase.groupsNames
+    public static getAverageRating(lifeCase: LifeCase, latLng: LatLngTuple): number {
+        const sum = lifeCase.groupsNames
             .filter(groupName => groupName in this.amenities && this.amenities[groupName].length > 0)
-            .map(groupName => this.getRatingByGroupName(groupName, latlng))
-            .reduce((a, b) => a + b);
-        return sum / lifecase.groupsNames.length;
+            .map(groupName => this.getRatingByGroupName(groupName, latLng))
+            .reduce((a, b) => a + b, 0);
+        return sum / lifeCase.groupsNames.length;
     }
 
 }

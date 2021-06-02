@@ -3,12 +3,19 @@ import MapService from "@/views/MapService";
 import {LatLngTuple} from "leaflet";
 
 export default class OverlayDrawer {
-    private static defaultGradient = {
-        0.2: 'transparent',
-        0.5: 'blue',
-        0.75: 'cyan',
-        1.0: 'lime',
-    };
+    private static colors = [
+        'transparent',
+        'blue',
+        'cyan',
+        'lime',
+        'yellow',
+        'orange',
+        'red'
+    ];
+    private static defaultGradient = OverlayDrawer.colors.reduce((dictionary, currentValue, currentIndex, array) => {
+        dictionary[currentIndex / (array.length - 1)] = currentValue;
+        return dictionary;
+    }, {} as Record<number, string>);
 
     private static _grad = OverlayDrawer.gradient();
 
@@ -17,7 +24,7 @@ export default class OverlayDrawer {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-            throw "Canvas error";
+            throw new Error("Canvas error");
         }
         const gradient = ctx.createLinearGradient(0, 0, 0, 256);
 
@@ -38,7 +45,7 @@ export default class OverlayDrawer {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-            throw "Canvas error";
+            throw new Error("Canvas error");
         }
         const imageData = new ImageData(width, height);
         const data = imageData.data;
@@ -46,12 +53,12 @@ export default class OverlayDrawer {
         const left = bounds[1];
         const top = bounds[2];
         const right = bounds[3];
-        const dlat = (top - bottom) / 2 / height;
-        const dlng = (right - left) / 2 / width;
+        const dLat = (top - bottom) / 2 / height;
+        const dLng = (right - left) / 2 / width;
         let counter = 0;
         MapService.cacheDistances(bounds);
-        for (let lat = top - dlat, i = 0; i < height; i++, lat -= 2 * dlat) {
-            for (let lng = left + dlng, j = 0; j < width; j++, lng += 2 * dlng) {
+        for (let lat = top - dLat, i = 0; i < height; i++, lat -= 2 * dLat) {
+            for (let lng = left + dLng, j = 0; j < width; j++, lng += 2 * dLng) {
                 const rating = MapService.getAverageRating(lifeCase, [lat, lng] as LatLngTuple);
                 const r = Math.trunc(Math.max(0, Math.min(255, rating / 5 * 255)));
                 const r4 = 4 * r;

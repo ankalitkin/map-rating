@@ -9,7 +9,6 @@
 import Vue from 'vue'
 import {Component} from "vue-property-decorator";
 import * as L from 'leaflet';
-import {LatLngTuple} from 'leaflet';
 import {BBox} from "@/views/Types";
 import MapService from "@/views/MapService";
 import Preferences from "@/views/Preferences";
@@ -19,7 +18,7 @@ import OverlayDrawer from "@/components/OverlayDrawer";
 @Component({})
 export default class Home extends Vue {
   private map!: L.Map;
-  private center: LatLngTuple = [51.6618, 39.2020];
+  private center: L.LatLngTuple = [51.6618, 39.2020];
   private lastOverlay: L.ImageOverlay | null = null;
   private zoom = 13;
   private state = "Готов"
@@ -28,7 +27,7 @@ export default class Home extends Vue {
     this.map = L.map("map").setView(this.center, this.zoom);
     L.tileLayer(this.tileProvider.url, {attribution: this.tileProvider.attribution}).addTo(this.map);
     this.map.on('click', (e: { latlng: L.LatLng }) => {
-      const pos: LatLngTuple = [e.latlng.lat, e.latlng.lng];
+      const pos: L.LatLngTuple = [e.latlng.lat, e.latlng.lng];
       const rating = MapService.getAverageRating(Preferences.cases[0], pos);
       L.popup()
           .setLatLng(e.latlng)
