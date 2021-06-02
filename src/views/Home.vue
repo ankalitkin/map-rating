@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div id="map" style="height: 800px"/>
-    <div class="ma-4">
+    <div id="map" style="height: 800px; z-index: 1"/>
+    <div class="pa-4" style="z-index: 2; position: fixed; left: 0; bottom: 0;">
       <v-btn @click="paint" :disabled="false">Раскрасить карту</v-btn>
       <span class="ml-4">{{ state }}</span>
       <v-radio-group v-model="selected_case">
