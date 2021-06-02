@@ -2,6 +2,12 @@ import {AmenityGroup, LifeCase} from "@/views/Types";
 
 export default class Preferences {
     public static groups: Record<string, AmenityGroup> = {
+        "public_transport": {
+            name: "Общественный транспорт",
+            tags: [
+                "highway: bus_stop"
+            ]
+        },
         "grocery": {
             name: "Магазины и рынки",
             tags: [
@@ -87,6 +93,7 @@ export default class Preferences {
                 "kindergarten",
                 "school",
                 "hairdresser",
+                "public_transport",
             ]
         },
         {
@@ -96,6 +103,7 @@ export default class Preferences {
                 "pharmacy",
                 "clinic",
                 "food",
+                "public_transport",
             ]
         },
         {
@@ -108,6 +116,7 @@ export default class Preferences {
                 "cinema",
                 "pub",
                 "nightclub",
+                "public_transport",
             ]
         },
     ]

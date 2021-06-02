@@ -35,38 +35,14 @@ export default class MapService {
         return data;
     }
 
-    private static createQuery(bbox: BBox): string {
-        const keys: string[] = [];
-        const values: string[] = [];
-        Object.keys(Preferences.groups)
-            .flatMap(groupName => Preferences.groups[groupName])
-            .flatMap(group => group.tags)
-            .forEach(tag => {
-                const colon = tag.indexOf(':');
-                const key = tag.substring(0, colon).trim();
-                if (keys.indexOf(key) < 0) {
-                    keys.push(key)
-                }
-                const value = tag.substring(colon + 1).trim();
-                if (values.indexOf(value) < 0) {
-                    values.push(value)
-                }
-            });
-        const cond = `~"^(${keys.join('|')})$"~"^(${values.join('|')})$"`;
-        let query = `[out:json][bbox:${bbox.join(",")}];(\n`;
-        query += `node[${cond}];way[${cond}];relation[${cond}];\n`
-        query += ");out center;";
-        return query;
-    }
-
     public static async loadAmenities(bbox: BBox): Promise<void> {
-        const acceptedTags = ["amenity", "shop", "healthcare"];
+        const acceptedToSave = ["amenity", "shop", "healthcare", "highway"];
         const overpassData = await this.queryData(bbox);
         const amenities: Record<string, OverpassElem[]> = {}
         overpassData.elements.forEach(next => {
             const el = next as unknown as OverpassElem;
             const tags = el.tags as Record<string, string>;
-            Object.keys(tags).filter(key => acceptedTags.indexOf(key) >= 0).forEach(key => {
+            Object.keys(tags).filter(key => acceptedToSave.indexOf(key) >= 0).forEach(key => {
                 tags[key].split(/[;, ]/).forEach(value => {
                     const tag = `${key}: ${value}`;
                     Object.keys(Preferences.groups).forEach(groupName => {
@@ -81,6 +57,38 @@ export default class MapService {
             });
         });
         MapService.amenities = amenities;
+    }
+
+    private static createQuery(bbox: BBox): string {
+        const acceptedAmenityTags = ["amenity", "shop", "healthcare"];
+        const keys: string[] = [];
+        const values: string[] = [];
+        let query = `[out:json][bbox:${bbox.join(",")}];(\n`;
+        Object.keys(Preferences.groups)
+            .flatMap(groupName => Preferences.groups[groupName])
+            .flatMap(group => group.tags)
+            .forEach(tag => {
+                const colon = tag.indexOf(':');
+                const key = tag.substring(0, colon).trim();
+                if (acceptedAmenityTags.indexOf(key) < 0) {
+                    const tagCond = tag.replace(":", "=").replace(" ", "");
+                    query += `node[${tagCond}];\n`
+                    return;
+                }
+                if (keys.indexOf(key) < 0) {
+                    keys.push(key)
+                }
+                const value = tag.substring(colon + 1).trim();
+                if (values.indexOf(value) < 0) {
+                    values.push(value)
+                }
+            });
+        const cond = `~"^(${keys.join('|')})$"~"^(${values.join('|')})$"`;
+        query += `node[${cond}];\n`;
+        query += `way[${cond}];\n`
+        query += `relation[${cond}];\n`
+        query += ");out center;";
+        return query;
     }
 
     private static getLatLng(element: OverpassElem): LatLngTuple {

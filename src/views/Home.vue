@@ -2,7 +2,7 @@
   <div>
     <div id="map" style="height: 800px"/>
     <v-btn @click="paint" :disabled="false">Раскрасить карту</v-btn>
-    {{state}}
+    {{ state }}
   </div>
 </template>
 <script lang="ts">
@@ -23,6 +23,11 @@ export default class Home extends Vue {
   private zoom = 13;
   private state = "Готов"
 
+  private tileProvider = {
+    attribution: '&copy; <a target="_blank" href="https://osm.org/copyright">OpenStreetMap</a> contributors',
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+  };
+
   mounted(): void {
     this.map = L.map("map").setView(this.center, this.zoom);
     L.tileLayer(this.tileProvider.url, {attribution: this.tileProvider.attribution}).addTo(this.map);
@@ -31,43 +36,44 @@ export default class Home extends Vue {
       const rating = MapService.getAverageRating(Preferences.cases[0], pos);
       L.popup()
           .setLatLng(e.latlng)
-          .setContent('<b>Рейтинг: </b>' + rating)
+          .setContent('<b>Рейтинг: </b>' + rating.toFixed(3))
           .openOn(this.map);
     })
   }
 
-  private tileProvider = {
-    attribution: '&copy; <a target="_blank" href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-  };
-
-  private paint(): void {
-    const bbox = this.bbox();
-    this.state = "Загрузка данных";
-    MapService.loadAmenities(bbox).then(() => {
-      this.state = "Предварительная отрисовка";
-      const imageBounds: L.LatLngBoundsExpression = [[bbox[0], bbox[1]], [bbox[2], bbox[3]]];
-      setTimeout(() => {
-        const canvas = OverlayDrawer.drawRating(bbox, 100, 100, Preferences.cases[0]);
-        if (this.lastOverlay) {
-          this.lastOverlay.removeFrom(this.map);
-        }
-        this.lastOverlay = L.imageOverlay(canvas.toDataURL(), imageBounds, {opacity: 0.5}).addTo(this.map);
-        this.state = "Финальная отрисовка";
-        setTimeout(() => {
-          const canvas2 = OverlayDrawer.drawRating(bbox, 256, 256, Preferences.cases[0]);
-          if (this.lastOverlay) {
-            this.lastOverlay.removeFrom(this.map);
-          }
-          this.lastOverlay = L.imageOverlay(canvas2.toDataURL(), imageBounds, {opacity: 0.5}).addTo(this.map);
-          this.state = "Готов"
-        });
-      });
-    }).catch(e => {
+  private async paint(): void {
+    try {
+      this.state = "Загрузка данных";
+      await MapService.loadAmenities(this.bbox());
+    } catch (e) {
       console.error(e);
       this.state = "Произошла ошибка при загрузке данных";
-    });
+    }
 
+    try {
+      this.state = "Предварительная отрисовка";
+      await this.draw(100, 100);
+
+      this.state = "Финальная отрисовка";
+      await this.draw(256, 256);
+
+      this.state = "Готов"
+    } catch (e) {
+      console.error(e);
+      this.state = "Произошла ошибка при отрисовке данных";
+    }
+  }
+
+  private async draw(width: number, height: number) {
+    const bbox = this.bbox();
+    const imageBounds: L.LatLngBoundsExpression = [[bbox[0], bbox[1]], [bbox[2], bbox[3]]];
+    const canvas = await new Promise(resolve => setTimeout(() => {
+      resolve(OverlayDrawer.drawRating(bbox, width, height, Preferences.cases[0]));
+    }));
+    if (this.lastOverlay) {
+      this.lastOverlay.removeFrom(this.map);
+    }
+    this.lastOverlay = L.imageOverlay(canvas.toDataURL(), imageBounds, {opacity: 0.5}).addTo(this.map);
   }
 
   private bbox(): BBox {
