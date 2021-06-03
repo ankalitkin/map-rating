@@ -9,13 +9,13 @@ import {kdTree} from "kd-tree-javascript";
 export default class MapService {
     private static amenitiesList: Record<string, XY[]> = {};
     private static amenitiesTree: Record<string, kdTree<XY>> = {};
+    private static accepted = ["amenity", "shop", "healthcare", "highway"];
     private static calcCache = {
         metersPerLatDeg: 0,
         metersPerLngDeg: 0,
     }
 
     public static async loadAmenities(bbox: BBox): Promise<void> {
-        const acceptedToSave = ["amenity", "shop", "healthcare", "highway"];
         const overpassData = await MapService.queryData(bbox);
         const amenitiesList: Record<string, XY[]> = {}
         const amenitiesTree: Record<string, kdTree<XY>> = {}
@@ -23,7 +23,7 @@ export default class MapService {
         overpassData.elements.forEach(next => {
             const el = next as unknown as OverpassElem;
             const tags = el.tags as Record<string, string>;
-            Object.keys(tags).filter(key => acceptedToSave.indexOf(key) >= 0).forEach(key => {
+            Object.keys(tags).filter(key => this.accepted.indexOf(key) >= 0).forEach(key => {
                 tags[key].split(/[;, ]/).forEach(value => {
                     const tag = `${key}: ${value}`;
                     Object.keys(Preferences.groups).forEach(groupName => {
@@ -74,7 +74,6 @@ export default class MapService {
     }
 
     private static createQuery(bbox: BBox): string {
-        const acceptedAmenityTags = ["amenity", "shop", "healthcare"];
         const keys: string[] = [];
         const values: string[] = [];
         let query = `[out:json][bbox:${bbox.join(",")}];(\n`;
@@ -84,11 +83,6 @@ export default class MapService {
             .forEach(tag => {
                 const colon = tag.indexOf(':');
                 const key = tag.substring(0, colon).trim();
-                if (acceptedAmenityTags.indexOf(key) < 0) {
-                    const tagCond = tag.replace(":", "=").replace(" ", "");
-                    query += `node[${tagCond}];\n`
-                    return;
-                }
                 if (keys.indexOf(key) < 0) {
                     keys.push(key)
                 }
